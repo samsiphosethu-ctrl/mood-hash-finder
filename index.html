@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find Your Hash</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+:root {
+  --green:     #1B3A2F;
+  --green-mid: #2E5444;
+  --cream:     #F8F6F2;
+  --gold:      #D4A04A;
+  --white:     #FFFFFF;
+  --text:      #2C2C2C;
+  --muted:     #7A8B82;
+  --radius:    12px;
+  --shadow:    0 4px 24px rgba(27,58,47,0.10);
+}
+ 
+body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+}
+ 
+.widget {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 32px 20px 40px;
+}
+ 
+/* ── HEADER ── */
+.header { text-align: center; margin-bottom: 28px; }
+.eyebrow {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+.header h1 {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--green);
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+.header p { font-size: 0.92rem; color: var(--muted); line-height: 1.5; }
+ 
+/* ── PROGRESS ── */
+.progress-wrap { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+.progress-bar { flex: 1; height: 4px; background: rgba(27,58,47,0.12); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--green); border-radius: 99px; transition: width 0.4s cubic-bezier(0.4,0,0.2,1); }
+.progress-label { font-size: 11px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+ 
+/* ── QUESTION CARD ── */
+.card {
+  background: var(--white);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.35s cubic-bezier(0.4,0,0.2,1) both;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.question-num { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px; }
+.question-text { font-size: 1.1rem; font-weight: 700; color: var(--green); line-height: 1.4; margin-bottom: 20px; }
+ 
+/* ── OPTIONS ── */
+.options { display: flex; flex-direction: column; gap: 10px; }
+.option-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--cream);
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s, background 0.18s, transform 0.12s;
+  -webkit-tap-highlight-color: transparent;
+}
+.option-btn:hover { border-color: var(--green); background: #EDF2EF; transform: translateY(-1px); }
+.option-btn:active { transform: translateY(0) scale(0.98); }
+.option-btn.selected { border-color: var(--green); background: #EDF2EF; }
+.option-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border-radius: 8px;
+}
+.option-text { flex: 1; }
+.option-label { font-size: 0.93rem; font-weight: 600; color: var(--green); display: block; margin-bottom: 2px; }
+.option-sub { font-size: 0.8rem; color: var(--muted); line-height: 1.35; }
+ 
+/* ── RESULT CARD ── */
+.result-card {
+  background: var(--white);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.4s cubic-bezier(0.4,0,0.2,1) both;
+}
+.result-banner { padding: 28px 24px 22px; text-align: center; }
+.result-icon { font-size: 2.8rem; margin-bottom: 12px; display: block; }
+.result-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+.result-name { font-size: 1.45rem; font-weight: 700; color: var(--green); margin-bottom: 10px; }
+.result-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.6; max-width: 380px; margin: 0 auto; }
+.result-tags { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+.tag { font-size: 0.78rem; font-weight: 600; padding: 4px 12px; border-radius: 99px; background: var(--cream); color: var(--green); }
+.result-divider { height: 1px; background: var(--cream); }
+.result-actions { padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; }
+.result-price { font-size: 0.82rem; color: var(--muted); text-align: center; margin-top: 4px; }
+ 
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  background: var(--green);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.93rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.12s;
+  letter-spacing: 0.01em;
+}
+.btn-primary:hover { background: var(--green-mid); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0) scale(0.98); }
+.btn-secondary {
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  background: transparent;
+  color: var(--green);
+  border: 2px solid rgba(27,58,47,0.2);
+  border-radius: var(--radius);
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+.btn-secondary:hover { border-color: var(--green); background: #EDF2EF; }
+.disclaimer { text-align: center; font-size: 0.74rem; color: var(--muted); margin-top: 20px; line-height: 1.5; }
+ 
+/* ── SCREENS ── */
+.screen { display: none; }
+.screen.active { display: block; }
+</style>
+</head>
+<body>
+ 
+<div class="widget">
+ 
+  <!-- INTRO -->
+  <div id="screen-intro" class="screen active">
+    <div class="header">
+      <span class="eyebrow">Find Your Match</span>
+      <h1>Which Mood hash is right for you?</h1>
+      <p>Three quick questions. Four distinct experiences. Find your starting point.</p>
+    </div>
+    <div class="card" style="text-align:center; padding: 32px 24px;">
+      <div style="font-size:2.6rem; margin-bottom:16px;">🌿</div>
+      <p style="font-size:0.95rem; color:var(--muted); line-height:1.65; margin-bottom:24px;">
+        Mood carries four hash styles — each one shaped by a different production method, potency level, and intended experience. This quiz narrows it down for you.
+      </p>
+      <button class="btn-primary" onclick="startQuiz()">Find my match</button>
+    </div>
+    <p class="disclaimer">Must be 21+. For informational purposes only.</p>
+  </div>
+ 
+  <!-- QUIZ -->
+  <div id="screen-quiz" class="screen">
+    <div class="progress-wrap">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:33%"></div>
+      </div>
+      <span class="progress-label" id="progress-label">1 of 3</span>
+    </div>
+    <div class="card" id="question-card">
+      <div class="question-num" id="q-num">Question 1</div>
+      <div class="question-text" id="q-text"></div>
+      <div class="options" id="q-options"></div>
+    </div>
+    <p class="disclaimer" style="margin-top:16px;">Must be 21+. For informational purposes only.</p>
+  </div>
+ 
+  <!-- RESULT -->
+  <div id="screen-result" class="screen">
+    <div class="header" style="margin-bottom:20px;">
+      <span class="eyebrow">Your Match</span>
+      <h1>We found your hash.</h1>
+    </div>
+    <div class="result-card" id="result-card">
+      <div class="result-banner" id="result-banner"></div>
+      <div class="result-divider"></div>
+      <div class="result-actions" id="result-actions"></div>
+    </div>
+    <div style="text-align:center; margin-top:18px;">
+      <button class="btn-secondary" onclick="resetQuiz()">Start over</button>
+    </div>
+    <p class="disclaimer">Must be 21+. THC-containing products may cause a positive drug test result.</p>
+  </div>
+ 
+</div>
+ 
+<script>
+// ── QUESTIONS ──────────────────────────────────────────────────────────────
+// Two scoring axes:
+//   intensity:  +1 = full-strength preference, -1 = moderate preference
+//   vibe:       +1 = social/cerebral,          -1 = calming/traditional
+ 
+var questions = [
+  {
+    text: "How do you usually experience cannabis?",
+    options: [
+      { emoji: "🌱", label: "Casually — I like to take it easy",
+        sub:   "A smooth, manageable experience every time",
+        i: -1, v: 0  },
+      { emoji: "🔥", label: "Regularly — I know what I can handle",
+        sub:   "I'm comfortable going further",
+        i: +1, v: 0  },
+      { emoji: "🎯", label: "I'm pretty particular about it",
+        sub:   "Quality, tradition, and craftsmanship matter to me",
+        i: +1, v: -1 }
+    ]
+  },
+  {
+    text: "What kind of evening are you planning?",
+    options: [
+      { emoji: "🎉", label: "Social — out with friends or being creative",
+        sub:   "I want to feel uplifted and present",
+        i:  0, v: +1 },
+      { emoji: "🌙", label: "Solo wind-down — fully switching off",
+        sub:   "Deep relaxation, body and mind",
+        i:  0, v: -1 },
+      { emoji: "✨", label: "A clear-headed, cerebral experience",
+        sub:   "Focused and elevated, not foggy",
+        i: +1, v: +1 }
+    ]
+  },
+  {
+    text: "How do you like to consume?",
+    options: [
+      { emoji: "🚬", label: "Rolling a joint",
+        sub:   "Classic and familiar",
+        i:  0, v: +1 },
+      { emoji: "🪨", label: "Pipe or bowl",
+        sub:   "Quick and easy to control",
+        i:  0, v: -1 },
+      { emoji: "💨", label: "Open to anything — I want the best experience",
+        sub:   "Vaping, dabbing, whatever works",
+        i: +1, v:  0 }
+    ]
+  }
+];
+ 
+// ── RESULTS ───────────────────────────────────────────────────────────────
+// Four products mapped by (intensity, vibe) quadrant:
+//   (+intensity, +vibe)  → Classic Hash        (full-strength, cerebral)
+//   (+intensity, -vibe)  → Himalayan Hash       (full-strength, traditional/calming)
+//   (-intensity, +vibe)  → Caribbean Dream Hash (moderate, social/uplifting)
+//   (-intensity, -vibe)  → Afghan Hash          (moderate, relaxing/body-forward)
+ 
+var results = {
+  classic: {
+    icon:   "🌿",
+    name:   "Classic Hash",
+    rating: "4.54 ★  (418 reviews)",
+    price:  "From $30.67/g",
+    desc:   "Versatile, cerebral, and full-strength. Classic Hash delivers a clear, focused uplift with a smooth, full-flavor experience — well-suited to a joint, a bowl, or anything in between.",
+    tags:   ["63.26% THCa", "Full-strength", "Cerebral", "Versatile"],
+    url:    "https://mood.com/product/classic-hash",
+    cta:    "Shop Classic Hash",
+    bg:     "#EDF5F0"
+  },
+  himalayan: {
+    icon:   "🏔️",
+    name:   "Himalayan Hash",
+    rating: "4.63 ★  (52 reviews)",
+    price:  "From $44.00",
+    desc:   "The top-rated hash in the Mood lineup. Himalayan Hash is crafted in a traditional style for those who want a full-strength, deeply grounding experience with serious character.",
+    tags:   ["Full-strength", "Traditional craft", "Grounding", "Premium"],
+    url:    "https://mood.com/product/himalayan-hash",
+    cta:    "Shop Himalayan Hash",
+    bg:     "#F0EDE8"
+  },
+  caribbean: {
+    icon:   "🌊",
+    name:   "Caribbean Dream Hash",
+    rating: "4.42 ★  (193 reviews)",
+    price:  "From $26.67/g",
+    desc:   "Social, uplifting, and approachable. Caribbean Dream Hash is Mood's most easygoing option — a smooth, enjoyable experience that suits a group setting or a relaxed creative session.",
+    tags:   ["Moderate", "Social", "Uplifting", "Approachable"],
+    url:    "https://mood.com/product/caribbean-dream-hash",
+    cta:    "Shop Caribbean Dream Hash",
+    bg:     "#E8F2F5"
+  },
+  afghan: {
+    icon:   "🍫",
+    name:   "Afghan Hash",
+    rating: "4.51 ★  (353 reviews)",
+    price:  "From $28.00/g",
+    desc:   "A deeply calming, body-forward experience rooted in traditional pressing techniques. Afghan Hash is built for winding down — rich, earthy, and made for a slow, settled evening.",
+    tags:   ["41.30% Delta-8 THC", "Moderate", "Body-forward", "Calming"],
+    url:    "https://mood.com/product/afghan-hash",
+    cta:    "Shop Afghan Hash",
+    bg:     "#F5EEE6"
+  }
+};
+ 
+// ── STATE ─────────────────────────────────────────────────────────────────
+var currentQ    = 0;
+var scoreI      = 0; // intensity axis
+var scoreV      = 0; // vibe axis
+ 
+// ── HELPERS ──────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(el) {
+    el.classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  notifyHeight();
+}
+ 
+function notifyHeight() {
+  setTimeout(function() {
+    var h = document.body.scrollHeight;
+    try { window.parent.postMessage({ type: 'resize', height: h }, '*'); } catch(e) {}
+  }, 60);
+}
+ 
+// ── FLOW ──────────────────────────────────────────────────────────────────
+function startQuiz() {
+  currentQ = 0;
+  scoreI   = 0;
+  scoreV   = 0;
+  renderQuestion();
+  showScreen('screen-quiz');
+}
+ 
+function renderQuestion() {
+  var q   = questions[currentQ];
+  var pct = Math.round(((currentQ + 1) / questions.length) * 100);
+ 
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = (currentQ + 1) + ' of ' + questions.length;
+  document.getElementById('q-num').textContent  = 'Question ' + (currentQ + 1);
+  document.getElementById('q-text').textContent = q.text;
+ 
+  var optionsEl = document.getElementById('q-options');
+  optionsEl.innerHTML = '';
+ 
+  q.options.forEach(function(opt) {
+    var btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.setAttribute('aria-label', opt.label);
+    btn.innerHTML =
+      '<span class="option-emoji">' + opt.emoji + '</span>' +
+      '<span class="option-text">' +
+        '<span class="option-label">' + opt.label + '</span>' +
+        '<span class="option-sub">'   + opt.sub   + '</span>' +
+      '</span>';
+ 
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.option-btn').forEach(function(b) { b.classList.remove('selected'); });
+      btn.classList.add('selected');
+ 
+      setTimeout(function() {
+        scoreI += opt.i;
+        scoreV += opt.v;
+ 
+        if (currentQ < questions.length - 1) {
+          currentQ++;
+          var card = document.getElementById('question-card');
+          card.style.animation = 'none';
+          void card.offsetWidth;
+          card.style.animation = '';
+          renderQuestion();
+        } else {
+          showResult();
+        }
+        notifyHeight();
+      }, 260);
+    });
+ 
+    optionsEl.appendChild(btn);
+  });
+ 
+  notifyHeight();
+}
+ 
+function pickResult() {
+  // Quadrant map:
+  // intensity >= 0 AND vibe >= 0  → classic
+  // intensity >= 0 AND vibe < 0   → himalayan
+  // intensity < 0  AND vibe >= 0  → caribbean
+  // intensity < 0  AND vibe < 0   → afghan
+  if (scoreI >= 0 && scoreV >= 0) return 'classic';
+  if (scoreI >= 0 && scoreV < 0)  return 'himalayan';
+  if (scoreI < 0  && scoreV >= 0) return 'caribbean';
+  return 'afghan';
+}
+ 
+function showResult() {
+  var key = pickResult();
+  var r   = results[key];
+ 
+  var banner = document.getElementById('result-banner');
+  banner.style.background = r.bg;
+ 
+  var tagsHtml = r.tags.map(function(t) {
+    return '<span class="tag">' + t + '</span>';
+  }).join('');
+ 
+  banner.innerHTML =
+    '<span class="result-icon">'   + r.icon   + '</span>' +
+    '<div class="result-eyebrow">Your match</div>' +
+    '<div class="result-name">'    + r.name   + '</div>' +
+    '<div style="font-size:0.8rem;color:var(--gold);font-weight:600;margin-bottom:8px;">' + r.rating + '</div>' +
+    '<div class="result-desc">'    + r.desc   + '</div>' +
+    '<div class="result-tags">'    + tagsHtml + '</div>';
+ 
+  var actions = document.getElementById('result-actions');
+  actions.innerHTML =
+    '<a class="btn-primary" href="' + r.url + '" target="_blank" rel="noopener">' + r.cta + '</a>' +
+    '<div class="result-price">' + r.price + '</div>';
+ 
+  showScreen('screen-result');
+}
+ 
+function resetQuiz() {
+  currentQ = 0;
+  scoreI   = 0;
+  scoreV   = 0;
+  showScreen('screen-intro');
+}
+ 
+// ── AUTO-HEIGHT ────────────────────────────────────────────────────────────
+window.addEventListener('load',   function() { notifyHeight(); });
+window.addEventListener('resize', function() { notifyHeight(); });
+if (window.ResizeObserver) {
+  new ResizeObserver(function() { notifyHeight(); }).observe(document.body);
+}
+</script>
+</body>
+</html>
